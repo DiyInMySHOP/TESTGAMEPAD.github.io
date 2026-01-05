@@ -1,0 +1,505 @@
+import React, { useState, useEffect } from 'react';
+import { BookOpen, Mic, Edit3, Trophy, Calendar, CheckCircle, Play, Volume2, ChevronRight } from 'lucide-react';
+
+const EnglishLearningApp = () => {
+  const [currentDay, setCurrentDay] = useState(1);
+  const [completedLessons, setCompletedLessons] = useState({});
+  const [selectedLesson, setSelectedLesson] = useState(null);
+  const [userAnswer, setUserAnswer] = useState('');
+  const [showFeedback, setShowFeedback] = useState(false);
+
+  // โครงสร้างหลักสูตร 30 วัน
+  const curriculum = {
+    week1: {
+      title: "สัปดาห์ที่ 1: พื้นฐานสำคัญ",
+      days: [
+        {
+          day: 1,
+          topic: "ทักทาย & แนะนำตัว",
+          vocabulary: ["Hello", "Hi", "Good morning", "My name is", "Nice to meet you"],
+          reading: "Hello! My name is John. I am from Thailand. Nice to meet you!",
+          speaking: "ฝึกพูด: Hello, my name is [ชื่อคุณ]. I am from Thailand.",
+          writing: "เขียน: แนะนำตัวเอง 3 ประโยค"
+        },
+        {
+          day: 2,
+          topic: "ตัวเลขและอายุ",
+          vocabulary: ["One to Ten", "How old", "Year old", "Age", "Number"],
+          reading: "I am 25 years old. She is 30 years old. He is 18.",
+          speaking: "ฝึกพูด: I am ___ years old.",
+          writing: "เขียนประโยคบอกอายุของคนในครอบครัว"
+        },
+        {
+          day: 3,
+          topic: "ครอบครัว",
+          vocabulary: ["Father", "Mother", "Brother", "Sister", "Family"],
+          reading: "I have a big family. My father is a teacher. My mother is a doctor.",
+          speaking: "ฝึกพูด: I have a [father/mother/brother/sister]",
+          writing: "เขียนเกี่ยวกับครอบครัวของคุณ"
+        },
+        {
+          day: 4,
+          topic: "สี",
+          vocabulary: ["Red", "Blue", "Green", "Yellow", "Color"],
+          reading: "The sky is blue. The grass is green. I like red.",
+          speaking: "ฝึกพูด: My favorite color is ___",
+          writing: "บรรยายสีของของรอบตัว 5 อย่าง"
+        },
+        {
+          day: 5,
+          topic: "อาหาร",
+          vocabulary: ["Rice", "Noodle", "Water", "Food", "Delicious"],
+          reading: "I like rice. Thai food is delicious. I eat breakfast every day.",
+          speaking: "ฝึกพูด: I like to eat ___",
+          writing: "เขียนเกี่ยวกับอาหารที่ชอบ"
+        },
+        {
+          day: 6,
+          topic: "เวลา",
+          vocabulary: ["Morning", "Afternoon", "Evening", "Night", "Time"],
+          reading: "I wake up in the morning. I work in the afternoon. I sleep at night.",
+          speaking: "ฝึกพูด: I ___ in the morning.",
+          writing: "เขียนตารางกิจวัตรประจำวัน"
+        },
+        {
+          day: 7,
+          topic: "ทบทวนสัปดาห์ที่ 1",
+          vocabulary: ["Review all week 1 words"],
+          reading: "อ่านบทสนทนาสั้นๆ ทบทวนทุกหัวข้อ",
+          speaking: "ฝึกแนะนำตัวเองแบบเต็ม",
+          writing: "เขียนเรื่องเกี่ยวกับตัวเองและครอบครัว 1 ย่อหน้า"
+        }
+      ]
+    },
+    week2: {
+      title: "สัปดาห์ที่ 2: สร้างประโยคพื้นฐาน",
+      days: [
+        {
+          day: 8,
+          topic: "กริยาพื้นฐาน (1)",
+          vocabulary: ["Go", "Come", "Eat", "Drink", "Sleep"],
+          reading: "I go to school. I eat rice. I drink water.",
+          speaking: "ฝึกพูด: I [verb] every day.",
+          writing: "เขียนประโยคด้วยกริยาที่เรียน"
+        },
+        {
+          day: 9,
+          topic: "กริยาพื้นฐาน (2)",
+          vocabulary: ["Read", "Write", "Watch", "Listen", "Study"],
+          reading: "I read books. I watch TV. I study English.",
+          speaking: "ฝึกพูด: I like to [verb]",
+          writing: "เขียนเกี่ยวกับกิจกรรมที่ทำทุกวัน"
+        },
+        {
+          day: 10,
+          topic: "สถานที่",
+          vocabulary: ["School", "Home", "Market", "Hospital", "Bank"],
+          reading: "I go to school. My home is big. The market is near.",
+          speaking: "ฝึกพูด: I am at [place]",
+          writing: "บรรยายสถานที่ที่ไปบ่อย"
+        },
+        {
+          day: 11,
+          topic: "คำถามพื้นฐาน",
+          vocabulary: ["What", "Where", "When", "Who", "How"],
+          reading: "What is your name? Where are you from? When do you wake up?",
+          speaking: "ฝึกถามและตอบคำถาม",
+          writing: "เขียนคำถาม 5 ข้อและตอบ"
+        },
+        {
+          day: 12,
+          topic: "Yes/No Questions",
+          vocabulary: ["Yes", "No", "Do you", "Are you", "Can you"],
+          reading: "Do you like coffee? Yes, I do. Are you Thai? Yes, I am.",
+          speaking: "ฝึกตอบคำถาม Yes/No",
+          writing: "เขียนบทสนทนาสั้นๆ"
+        },
+        {
+          day: 13,
+          topic: "ปฏิเสธ",
+          vocabulary: ["Not", "Don't", "Doesn't", "Can't", "Won't"],
+          reading: "I don't like coffee. She doesn't eat meat. I can't swim.",
+          speaking: "ฝึกพูดประโยคปฏิเสธ",
+          writing: "เขียนสิ่งที่ทำไม่ได้หรือไม่ชอบ"
+        },
+        {
+          day: 14,
+          topic: "ทบทวนสัปดาห์ที่ 2",
+          vocabulary: ["Review all week 2 words"],
+          reading: "อ่านบทความสั้นๆ",
+          speaking: "สนทนาถามตอบ 10 ประโยค",
+          writing: "เขียนเกี่ยวกับวันหนึ่งของคุณ"
+        }
+      ]
+    },
+    week3: {
+      title: "สัปดาห์ที่ 3: สนทนาในชีวิตจริง",
+      days: [
+        {
+          day: 15,
+          topic: "ช้อปปิ้ง",
+          vocabulary: ["Buy", "Price", "How much", "Cheap", "Expensive"],
+          reading: "How much is this? It's 100 baht. That's expensive!",
+          speaking: "ฝึกซื้อของในร้าน",
+          writing: "เขียนบทสนทนาซื้อของ"
+        },
+        {
+          day: 16,
+          topic: "ร้านอาหาร",
+          vocabulary: ["Order", "Menu", "Bill", "Waiter", "Taste"],
+          reading: "Can I see the menu? I'd like to order rice. The bill, please.",
+          speaking: "ฝึกสั่งอาหาร",
+          writing: "เขียนเมนูร้านอาหารภาษาอังกฤษ"
+        },
+        {
+          day: 17,
+          topic: "ขอความช่วยเหลือ",
+          vocabulary: ["Help", "Please", "Excuse me", "Thank you", "Sorry"],
+          reading: "Excuse me, can you help me? Thank you very much!",
+          speaking: "ฝึกขอความช่วยเหลือ",
+          writing: "เขียนสถานการณ์ต่างๆ ที่ต้องขอความช่วยเหลือ"
+        },
+        {
+          day: 18,
+          topic: "ทิศทาง",
+          vocabulary: ["Left", "Right", "Straight", "Turn", "Near"],
+          reading: "Go straight. Turn left. It's near the bank.",
+          speaking: "ฝึกบอกทาง",
+          writing: "เขียนบอกทางจากบ้านไปโรงเรียน"
+        },
+        {
+          day: 19,
+          topic: "อากาศ",
+          vocabulary: ["Hot", "Cold", "Rain", "Sun", "Weather"],
+          reading: "The weather is hot today. It's raining. I like sunny days.",
+          speaking: "ฝึกบรรยายสภาพอากาศ",
+          writing: "เขียนเกี่ยวกับอากาศในแต่ละฤดู"
+        },
+        {
+          day: 20,
+          topic: "งานอดิเรก",
+          vocabulary: ["Hobby", "Play", "Sport", "Music", "Movie"],
+          reading: "My hobby is playing football. I like watching movies.",
+          speaking: "ฝึกพูดเกี่ยวกับงานอดิเรก",
+          writing: "เขียนเกี่ยวกับงานอดิเรกของคุณ"
+        },
+        {
+          day: 21,
+          topic: "ทบทวนสัปดาห์ที่ 3",
+          vocabulary: ["Review all week 3 words"],
+          reading: "อ่านบทสนทนาในชีวิตจริง",
+          speaking: "ฝึกบทสนทนาแบบต่อเนื่อง",
+          writing: "เขียนเรื่องราวชีวิตประจำวัน 2 ย่อหน้า"
+        }
+      ]
+    },
+    week4: {
+      title: "สัปดาห์ที่ 4: พัฒนาและปฏิบัติจริง",
+      days: [
+        {
+          day: 22,
+          topic: "อดีต-ปัจจุบัน-อนาคต",
+          vocabulary: ["Yesterday", "Today", "Tomorrow", "Was", "Will"],
+          reading: "Yesterday I went to school. Today I am home. Tomorrow I will go shopping.",
+          speaking: "ฝึกพูดเกี่ยวกับเวลา",
+          writing: "เขียนเกี่ยวกับเมื่อวาน วันนี้ พรุ่งนี้"
+        },
+        {
+          day: 23,
+          topic: "ความรู้สึก",
+          vocabulary: ["Happy", "Sad", "Angry", "Tired", "Excited"],
+          reading: "I am happy today. She is tired. He was angry yesterday.",
+          speaking: "ฝึกแสดงความรู้สึก",
+          writing: "เขียนเกี่ยวกับความรู้สึกในแต่ละสถานการณ์"
+        },
+        {
+          day: 24,
+          topic: "การเดินทาง",
+          vocabulary: ["Bus", "Train", "Car", "Walk", "Travel"],
+          reading: "I go to work by bus. I like to travel by train.",
+          speaking: "ฝึกพูดเกี่ยวกับการเดินทาง",
+          writing: "เขียนเกี่ยวกับการเดินทางที่ชอบ"
+        },
+        {
+          day: 25,
+          topic: "สุขภาพ",
+          vocabulary: ["Sick", "Healthy", "Doctor", "Medicine", "Exercise"],
+          reading: "I am sick. I go to the doctor. Exercise is good for health.",
+          speaking: "ฝึกพูดเกี่ยวกับสุขภาพ",
+          writing: "เขียนเกี่ยวกับการดูแลสุขภาพ"
+        },
+        {
+          day: 26,
+          topic: "งานและอาชีพ",
+          vocabulary: ["Work", "Job", "Teacher", "Doctor", "Engineer"],
+          reading: "I work at a hospital. My job is a teacher. She is a doctor.",
+          speaking: "ฝึกพูดเกี่ยวกับงาน",
+          writing: "เขียนเกี่ยวกับอาชีพที่อยากเป็น"
+        },
+        {
+          day: 27,
+          topic: "แผนอนาคต",
+          vocabulary: ["Dream", "Future", "Want", "Hope", "Plan"],
+          reading: "I want to be a teacher. My dream is to travel the world.",
+          speaking: "ฝึกพูดเกี่ยวกับความฝัน",
+          writing: "เขียนแผนชีวิต 5 ปีข้างหน้า"
+        },
+        {
+          day: 28,
+          topic: "บทสนทนาแบบเต็ม",
+          vocabulary: ["ใช้คำศัพท์ทั้งหมดที่เรียนมา"],
+          reading: "อ่านบทความยาวๆ",
+          speaking: "สนทนา 5 นาทีไม่หยุด",
+          writing: "เขียนเรื่องราว 1 หน้ากระดาษ"
+        },
+        {
+          day: 29,
+          topic: "ทบทวนทั้งหมด",
+          vocabulary: ["Review all 100+ words"],
+          reading: "อ่านบทความหลากหลาย",
+          speaking: "ฝึกสนทนาทุกหัวข้อ",
+          writing: "เขียนแนะนำตัวเองแบบสมบูรณ์"
+        },
+        {
+          day: 30,
+          topic: "🎉 วันสุดท้าย - ทดสอบทักษะ!",
+          vocabulary: ["Final Test"],
+          reading: "อ่านบทความและสรุป",
+          speaking: "พูดแนะนำตัว 3 นาที",
+          writing: "เขียนเรียงความ My Life in English"
+        }
+      ]
+    }
+  };
+
+  const getAllLessons = () => {
+    const lessons = [];
+    Object.values(curriculum).forEach(week => {
+      week.days.forEach(day => {
+        lessons.push(day);
+      });
+    });
+    return lessons;
+  };
+
+  const allLessons = getAllLessons();
+  const currentLesson = selectedLesson || allLessons.find(l => l.day === currentDay);
+
+  const completeLesson = () => {
+    setCompletedLessons(prev => ({...prev, [currentDay]: true}));
+    setShowFeedback(true);
+    setTimeout(() => {
+      if (currentDay < 30) {
+        setCurrentDay(currentDay + 1);
+        setSelectedLesson(null);
+        setUserAnswer('');
+        setShowFeedback(false);
+      }
+    }, 2000);
+  };
+
+  const progress = (Object.keys(completedLessons).length / 30) * 100;
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 p-4">
+      <div className="max-w-6xl mx-auto">
+        {/* Header */}
+        <div className="bg-white rounded-2xl shadow-xl p-6 mb-6">
+          <div className="flex items-center justify-between mb-4">
+            <div>
+              <h1 className="text-3xl font-bold text-gray-800 flex items-center gap-2">
+                <BookOpen className="text-indigo-600" />
+                เรียนภาษาอังกฤษ 1 เดือน
+              </h1>
+              <p className="text-gray-600 mt-2">พูด อ่าน เขียนได้ภายใน 30 วัน!</p>
+            </div>
+            <div className="text-right">
+              <div className="text-4xl font-bold text-indigo-600">วันที่ {currentDay}</div>
+              <div className="text-sm text-gray-500">จาก 30 วัน</div>
+            </div>
+          </div>
+          
+          {/* Progress Bar */}
+          <div className="mt-4">
+            <div className="flex justify-between mb-2">
+              <span className="text-sm font-medium text-gray-700">ความคืบหน้า</span>
+              <span className="text-sm font-medium text-indigo-600">{Math.round(progress)}%</span>
+            </div>
+            <div className="w-full bg-gray-200 rounded-full h-3">
+              <div 
+                className="bg-gradient-to-r from-indigo-500 to-purple-600 h-3 rounded-full transition-all duration-500"
+                style={{width: `${progress}%`}}
+              />
+            </div>
+          </div>
+        </div>
+
+        <div className="grid md:grid-cols-3 gap-6">
+          {/* Sidebar - Week Navigation */}
+          <div className="md:col-span-1">
+            <div className="bg-white rounded-2xl shadow-lg p-4 sticky top-4">
+              <h2 className="font-bold text-lg mb-4 flex items-center gap-2">
+                <Calendar className="text-indigo-600" />
+                หลักสูตร 4 สัปดาห์
+              </h2>
+              
+              {Object.entries(curriculum).map(([weekKey, week]) => (
+                <div key={weekKey} className="mb-4">
+                  <h3 className="font-semibold text-sm text-gray-700 mb-2">{week.title}</h3>
+                  <div className="space-y-1">
+                    {week.days.map(day => (
+                      <button
+                        key={day.day}
+                        onClick={() => {
+                          setCurrentDay(day.day);
+                          setSelectedLesson(day);
+                          setUserAnswer('');
+                          setShowFeedback(false);
+                        }}
+                        className={`w-full text-left px-3 py-2 rounded-lg text-sm transition-all ${
+                          currentDay === day.day
+                            ? 'bg-indigo-600 text-white font-medium'
+                            : completedLessons[day.day]
+                            ? 'bg-green-100 text-green-800'
+                            : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                        }`}
+                      >
+                        <div className="flex items-center justify-between">
+                          <span>วันที่ {day.day}: {day.topic}</span>
+                          {completedLessons[day.day] && (
+                            <CheckCircle className="w-4 h-4" />
+                          )}
+                        </div>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Main Content */}
+          <div className="md:col-span-2">
+            {currentLesson && (
+              <div className="space-y-4">
+                {/* Lesson Title */}
+                <div className="bg-gradient-to-r from-indigo-600 to-purple-600 rounded-2xl shadow-lg p-6 text-white">
+                  <h2 className="text-2xl font-bold mb-2">วันที่ {currentLesson.day}</h2>
+                  <h3 className="text-xl">{currentLesson.topic}</h3>
+                </div>
+
+                {/* Vocabulary Section */}
+                <div className="bg-white rounded-2xl shadow-lg p-6">
+                  <h3 className="font-bold text-lg mb-4 flex items-center gap-2">
+                    <BookOpen className="text-indigo-600" />
+                    คำศัพท์วันนี้
+                  </h3>
+                  <div className="grid grid-cols-2 gap-3">
+                    {currentLesson.vocabulary.map((word, idx) => (
+                      <div key={idx} className="bg-indigo-50 p-3 rounded-lg flex items-center justify-between">
+                        <span className="font-medium text-gray-800">{word}</span>
+                        <Volume2 className="w-5 h-5 text-indigo-600 cursor-pointer hover:text-indigo-800" />
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Reading Section */}
+                <div className="bg-white rounded-2xl shadow-lg p-6">
+                  <h3 className="font-bold text-lg mb-4 flex items-center gap-2">
+                    <BookOpen className="text-green-600" />
+                    ฝึกอ่าน (Reading)
+                  </h3>
+                  <div className="bg-green-50 p-4 rounded-lg">
+                    <p className="text-gray-800 text-lg leading-relaxed">{currentLesson.reading}</p>
+                  </div>
+                </div>
+
+                {/* Speaking Section */}
+                <div className="bg-white rounded-2xl shadow-lg p-6">
+                  <h3 className="font-bold text-lg mb-4 flex items-center gap-2">
+                    <Mic className="text-red-600" />
+                    ฝึกพูด (Speaking)
+                  </h3>
+                  <div className="bg-red-50 p-4 rounded-lg">
+                    <p className="text-gray-800 mb-3">{currentLesson.speaking}</p>
+                    <button className="bg-red-600 text-white px-4 py-2 rounded-lg flex items-center gap-2 hover:bg-red-700 transition-colors">
+                      <Mic className="w-4 h-4" />
+                      กดพูดตามเสียง
+                    </button>
+                  </div>
+                </div>
+
+                {/* Writing Section */}
+                <div className="bg-white rounded-2xl shadow-lg p-6">
+                  <h3 className="font-bold text-lg mb-4 flex items-center gap-2">
+                    <Edit3 className="text-purple-600" />
+                    ฝึกเขียน (Writing)
+                  </h3>
+                  <div className="bg-purple-50 p-4 rounded-lg">
+                    <p className="text-gray-800 mb-3">{currentLesson.writing}</p>
+                    <textarea
+                      value={userAnswer}
+                      onChange={(e) => setUserAnswer(e.target.value)}
+                      placeholder="เขียนคำตอบของคุณที่นี่..."
+                      className="w-full p-3 border-2 border-purple-200 rounded-lg focus:border-purple-600 focus:outline-none min-h-32"
+                    />
+                  </div>
+                </div>
+
+                {/* Complete Button */}
+                <div className="bg-white rounded-2xl shadow-lg p-6">
+                  {showFeedback ? (
+                    <div className="bg-green-100 border-2 border-green-500 rounded-lg p-4 text-center">
+                      <CheckCircle className="w-12 h-12 text-green-600 mx-auto mb-2" />
+                      <p className="text-green-800 font-bold text-lg">เยี่ยมมาก! คุณทำได้ดี! 🎉</p>
+                    </div>
+                  ) : (
+                    <button
+                      onClick={completeLesson}
+                      disabled={completedLessons[currentDay]}
+                      className={`w-full py-4 rounded-xl font-bold text-lg flex items-center justify-center gap-2 transition-all ${
+                        completedLessons[currentDay]
+                          ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                          : 'bg-gradient-to-r from-green-500 to-emerald-600 text-white hover:from-green-600 hover:to-emerald-700 shadow-lg hover:shadow-xl'
+                      }`}
+                    >
+                      {completedLessons[currentDay] ? (
+                        <>
+                          <CheckCircle className="w-6 h-6" />
+                          เรียนจบแล้ว!
+                        </>
+                      ) : (
+                        <>
+                          เรียนจบบทนี้
+                          <ChevronRight className="w-6 h-6" />
+                        </>
+                      )}
+                    </button>
+                  )}
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Tips Section */}
+        <div className="mt-6 bg-amber-50 border-2 border-amber-200 rounded-2xl p-6">
+          <h3 className="font-bold text-lg mb-3 text-amber-900 flex items-center gap-2">
+            <Trophy className="text-amber-600" />
+            เคลับลับความสำเร็จ!
+          </h3>
+          <ul className="space-y-2 text-amber-900">
+            <li>✅ เรียนทุกวัน 30-60 นาที ดีกว่าเรียนทีเดียวหลายชั่วโมง</li>
+            <li>✅ พูดออกเสียงทุกคำที่เรียน อย่าแค่อ่านในใจ</li>
+            <li>✅ เขียนด้วยมือจริงๆ ไม่ใช่แค่พิมพ์ - สมองจะจดจำได้ดีกว่า</li>
+            <li>✅ ใช้ภาษาอังกฤษในชีวิตจริง - พูดกับตัวเอง บรรยายสิ่งที่เห็น</li>
+            <li>✅ อย่ากลัวผิด! ผิดแล้วเรียนรู้ = คุณกำลังก้าวหน้า</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default EnglishLearningApp;
