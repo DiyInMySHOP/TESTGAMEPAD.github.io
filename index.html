@@ -1,505 +1,695 @@
-import React, { useState, useEffect } from 'react';
-import { BookOpen, Mic, Edit3, Trophy, Calendar, CheckCircle, Play, Volume2, ChevronRight } from 'lucide-react';
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<meta http-equiv="Permissions-Policy" content="gamepad=*">
+<title>PS4 Controller Tester</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=JetBrains+Mono:wght@400;600&display=swap');
 
-const EnglishLearningApp = () => {
-  const [currentDay, setCurrentDay] = useState(1);
-  const [completedLessons, setCompletedLessons] = useState({});
-  const [selectedLesson, setSelectedLesson] = useState(null);
-  const [userAnswer, setUserAnswer] = useState('');
-  const [showFeedback, setShowFeedback] = useState(false);
+:root {
+  --bg: #0d0d14;
+  --glow-blue: #00bfff;
+  --glow-purple: #9b59ff;
+  --green: #00ff88;
+  --yellow: #ffd700;
+  --red: #ff4466;
+  --text: #aab8cc;
+  --dim: #3a4455;
+}
 
-  // โครงสร้างหลักสูตร 30 วัน
-  const curriculum = {
-    week1: {
-      title: "สัปดาห์ที่ 1: พื้นฐานสำคัญ",
-      days: [
-        {
-          day: 1,
-          topic: "ทักทาย & แนะนำตัว",
-          vocabulary: ["Hello", "Hi", "Good morning", "My name is", "Nice to meet you"],
-          reading: "Hello! My name is John. I am from Thailand. Nice to meet you!",
-          speaking: "ฝึกพูด: Hello, my name is [ชื่อคุณ]. I am from Thailand.",
-          writing: "เขียน: แนะนำตัวเอง 3 ประโยค"
-        },
-        {
-          day: 2,
-          topic: "ตัวเลขและอายุ",
-          vocabulary: ["One to Ten", "How old", "Year old", "Age", "Number"],
-          reading: "I am 25 years old. She is 30 years old. He is 18.",
-          speaking: "ฝึกพูด: I am ___ years old.",
-          writing: "เขียนประโยคบอกอายุของคนในครอบครัว"
-        },
-        {
-          day: 3,
-          topic: "ครอบครัว",
-          vocabulary: ["Father", "Mother", "Brother", "Sister", "Family"],
-          reading: "I have a big family. My father is a teacher. My mother is a doctor.",
-          speaking: "ฝึกพูด: I have a [father/mother/brother/sister]",
-          writing: "เขียนเกี่ยวกับครอบครัวของคุณ"
-        },
-        {
-          day: 4,
-          topic: "สี",
-          vocabulary: ["Red", "Blue", "Green", "Yellow", "Color"],
-          reading: "The sky is blue. The grass is green. I like red.",
-          speaking: "ฝึกพูด: My favorite color is ___",
-          writing: "บรรยายสีของของรอบตัว 5 อย่าง"
-        },
-        {
-          day: 5,
-          topic: "อาหาร",
-          vocabulary: ["Rice", "Noodle", "Water", "Food", "Delicious"],
-          reading: "I like rice. Thai food is delicious. I eat breakfast every day.",
-          speaking: "ฝึกพูด: I like to eat ___",
-          writing: "เขียนเกี่ยวกับอาหารที่ชอบ"
-        },
-        {
-          day: 6,
-          topic: "เวลา",
-          vocabulary: ["Morning", "Afternoon", "Evening", "Night", "Time"],
-          reading: "I wake up in the morning. I work in the afternoon. I sleep at night.",
-          speaking: "ฝึกพูด: I ___ in the morning.",
-          writing: "เขียนตารางกิจวัตรประจำวัน"
-        },
-        {
-          day: 7,
-          topic: "ทบทวนสัปดาห์ที่ 1",
-          vocabulary: ["Review all week 1 words"],
-          reading: "อ่านบทสนทนาสั้นๆ ทบทวนทุกหัวข้อ",
-          speaking: "ฝึกแนะนำตัวเองแบบเต็ม",
-          writing: "เขียนเรื่องเกี่ยวกับตัวเองและครอบครัว 1 ย่อหน้า"
-        }
-      ]
-    },
-    week2: {
-      title: "สัปดาห์ที่ 2: สร้างประโยคพื้นฐาน",
-      days: [
-        {
-          day: 8,
-          topic: "กริยาพื้นฐาน (1)",
-          vocabulary: ["Go", "Come", "Eat", "Drink", "Sleep"],
-          reading: "I go to school. I eat rice. I drink water.",
-          speaking: "ฝึกพูด: I [verb] every day.",
-          writing: "เขียนประโยคด้วยกริยาที่เรียน"
-        },
-        {
-          day: 9,
-          topic: "กริยาพื้นฐาน (2)",
-          vocabulary: ["Read", "Write", "Watch", "Listen", "Study"],
-          reading: "I read books. I watch TV. I study English.",
-          speaking: "ฝึกพูด: I like to [verb]",
-          writing: "เขียนเกี่ยวกับกิจกรรมที่ทำทุกวัน"
-        },
-        {
-          day: 10,
-          topic: "สถานที่",
-          vocabulary: ["School", "Home", "Market", "Hospital", "Bank"],
-          reading: "I go to school. My home is big. The market is near.",
-          speaking: "ฝึกพูด: I am at [place]",
-          writing: "บรรยายสถานที่ที่ไปบ่อย"
-        },
-        {
-          day: 11,
-          topic: "คำถามพื้นฐาน",
-          vocabulary: ["What", "Where", "When", "Who", "How"],
-          reading: "What is your name? Where are you from? When do you wake up?",
-          speaking: "ฝึกถามและตอบคำถาม",
-          writing: "เขียนคำถาม 5 ข้อและตอบ"
-        },
-        {
-          day: 12,
-          topic: "Yes/No Questions",
-          vocabulary: ["Yes", "No", "Do you", "Are you", "Can you"],
-          reading: "Do you like coffee? Yes, I do. Are you Thai? Yes, I am.",
-          speaking: "ฝึกตอบคำถาม Yes/No",
-          writing: "เขียนบทสนทนาสั้นๆ"
-        },
-        {
-          day: 13,
-          topic: "ปฏิเสธ",
-          vocabulary: ["Not", "Don't", "Doesn't", "Can't", "Won't"],
-          reading: "I don't like coffee. She doesn't eat meat. I can't swim.",
-          speaking: "ฝึกพูดประโยคปฏิเสธ",
-          writing: "เขียนสิ่งที่ทำไม่ได้หรือไม่ชอบ"
-        },
-        {
-          day: 14,
-          topic: "ทบทวนสัปดาห์ที่ 2",
-          vocabulary: ["Review all week 2 words"],
-          reading: "อ่านบทความสั้นๆ",
-          speaking: "สนทนาถามตอบ 10 ประโยค",
-          writing: "เขียนเกี่ยวกับวันหนึ่งของคุณ"
-        }
-      ]
-    },
-    week3: {
-      title: "สัปดาห์ที่ 3: สนทนาในชีวิตจริง",
-      days: [
-        {
-          day: 15,
-          topic: "ช้อปปิ้ง",
-          vocabulary: ["Buy", "Price", "How much", "Cheap", "Expensive"],
-          reading: "How much is this? It's 100 baht. That's expensive!",
-          speaking: "ฝึกซื้อของในร้าน",
-          writing: "เขียนบทสนทนาซื้อของ"
-        },
-        {
-          day: 16,
-          topic: "ร้านอาหาร",
-          vocabulary: ["Order", "Menu", "Bill", "Waiter", "Taste"],
-          reading: "Can I see the menu? I'd like to order rice. The bill, please.",
-          speaking: "ฝึกสั่งอาหาร",
-          writing: "เขียนเมนูร้านอาหารภาษาอังกฤษ"
-        },
-        {
-          day: 17,
-          topic: "ขอความช่วยเหลือ",
-          vocabulary: ["Help", "Please", "Excuse me", "Thank you", "Sorry"],
-          reading: "Excuse me, can you help me? Thank you very much!",
-          speaking: "ฝึกขอความช่วยเหลือ",
-          writing: "เขียนสถานการณ์ต่างๆ ที่ต้องขอความช่วยเหลือ"
-        },
-        {
-          day: 18,
-          topic: "ทิศทาง",
-          vocabulary: ["Left", "Right", "Straight", "Turn", "Near"],
-          reading: "Go straight. Turn left. It's near the bank.",
-          speaking: "ฝึกบอกทาง",
-          writing: "เขียนบอกทางจากบ้านไปโรงเรียน"
-        },
-        {
-          day: 19,
-          topic: "อากาศ",
-          vocabulary: ["Hot", "Cold", "Rain", "Sun", "Weather"],
-          reading: "The weather is hot today. It's raining. I like sunny days.",
-          speaking: "ฝึกบรรยายสภาพอากาศ",
-          writing: "เขียนเกี่ยวกับอากาศในแต่ละฤดู"
-        },
-        {
-          day: 20,
-          topic: "งานอดิเรก",
-          vocabulary: ["Hobby", "Play", "Sport", "Music", "Movie"],
-          reading: "My hobby is playing football. I like watching movies.",
-          speaking: "ฝึกพูดเกี่ยวกับงานอดิเรก",
-          writing: "เขียนเกี่ยวกับงานอดิเรกของคุณ"
-        },
-        {
-          day: 21,
-          topic: "ทบทวนสัปดาห์ที่ 3",
-          vocabulary: ["Review all week 3 words"],
-          reading: "อ่านบทสนทนาในชีวิตจริง",
-          speaking: "ฝึกบทสนทนาแบบต่อเนื่อง",
-          writing: "เขียนเรื่องราวชีวิตประจำวัน 2 ย่อหน้า"
-        }
-      ]
-    },
-    week4: {
-      title: "สัปดาห์ที่ 4: พัฒนาและปฏิบัติจริง",
-      days: [
-        {
-          day: 22,
-          topic: "อดีต-ปัจจุบัน-อนาคต",
-          vocabulary: ["Yesterday", "Today", "Tomorrow", "Was", "Will"],
-          reading: "Yesterday I went to school. Today I am home. Tomorrow I will go shopping.",
-          speaking: "ฝึกพูดเกี่ยวกับเวลา",
-          writing: "เขียนเกี่ยวกับเมื่อวาน วันนี้ พรุ่งนี้"
-        },
-        {
-          day: 23,
-          topic: "ความรู้สึก",
-          vocabulary: ["Happy", "Sad", "Angry", "Tired", "Excited"],
-          reading: "I am happy today. She is tired. He was angry yesterday.",
-          speaking: "ฝึกแสดงความรู้สึก",
-          writing: "เขียนเกี่ยวกับความรู้สึกในแต่ละสถานการณ์"
-        },
-        {
-          day: 24,
-          topic: "การเดินทาง",
-          vocabulary: ["Bus", "Train", "Car", "Walk", "Travel"],
-          reading: "I go to work by bus. I like to travel by train.",
-          speaking: "ฝึกพูดเกี่ยวกับการเดินทาง",
-          writing: "เขียนเกี่ยวกับการเดินทางที่ชอบ"
-        },
-        {
-          day: 25,
-          topic: "สุขภาพ",
-          vocabulary: ["Sick", "Healthy", "Doctor", "Medicine", "Exercise"],
-          reading: "I am sick. I go to the doctor. Exercise is good for health.",
-          speaking: "ฝึกพูดเกี่ยวกับสุขภาพ",
-          writing: "เขียนเกี่ยวกับการดูแลสุขภาพ"
-        },
-        {
-          day: 26,
-          topic: "งานและอาชีพ",
-          vocabulary: ["Work", "Job", "Teacher", "Doctor", "Engineer"],
-          reading: "I work at a hospital. My job is a teacher. She is a doctor.",
-          speaking: "ฝึกพูดเกี่ยวกับงาน",
-          writing: "เขียนเกี่ยวกับอาชีพที่อยากเป็น"
-        },
-        {
-          day: 27,
-          topic: "แผนอนาคต",
-          vocabulary: ["Dream", "Future", "Want", "Hope", "Plan"],
-          reading: "I want to be a teacher. My dream is to travel the world.",
-          speaking: "ฝึกพูดเกี่ยวกับความฝัน",
-          writing: "เขียนแผนชีวิต 5 ปีข้างหน้า"
-        },
-        {
-          day: 28,
-          topic: "บทสนทนาแบบเต็ม",
-          vocabulary: ["ใช้คำศัพท์ทั้งหมดที่เรียนมา"],
-          reading: "อ่านบทความยาวๆ",
-          speaking: "สนทนา 5 นาทีไม่หยุด",
-          writing: "เขียนเรื่องราว 1 หน้ากระดาษ"
-        },
-        {
-          day: 29,
-          topic: "ทบทวนทั้งหมด",
-          vocabulary: ["Review all 100+ words"],
-          reading: "อ่านบทความหลากหลาย",
-          speaking: "ฝึกสนทนาทุกหัวข้อ",
-          writing: "เขียนแนะนำตัวเองแบบสมบูรณ์"
-        },
-        {
-          day: 30,
-          topic: "🎉 วันสุดท้าย - ทดสอบทักษะ!",
-          vocabulary: ["Final Test"],
-          reading: "อ่านบทความและสรุป",
-          speaking: "พูดแนะนำตัว 3 นาที",
-          writing: "เขียนเรียงความ My Life in English"
-        }
-      ]
-    }
-  };
+* { margin: 0; padding: 0; box-sizing: border-box; }
 
-  const getAllLessons = () => {
-    const lessons = [];
-    Object.values(curriculum).forEach(week => {
-      week.days.forEach(day => {
-        lessons.push(day);
-      });
-    });
-    return lessons;
-  };
+body {
+  background: var(--bg);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-height: 100vh;
+  font-family: 'JetBrains Mono', monospace;
+  padding: 20px;
+  overflow-x: hidden;
+  background-image:
+    radial-gradient(ellipse at 30% 40%, rgba(0,100,200,0.07) 0%, transparent 55%),
+    radial-gradient(ellipse at 70% 70%, rgba(155,89,255,0.05) 0%, transparent 55%);
+}
 
-  const allLessons = getAllLessons();
-  const currentLesson = selectedLesson || allLessons.find(l => l.day === currentDay);
+body::before {
+  content: '';
+  position: fixed; inset: 0;
+  background-image:
+    linear-gradient(rgba(0,191,255,0.025) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0,191,255,0.025) 1px, transparent 1px);
+  background-size: 50px 50px;
+  pointer-events: none;
+}
 
-  const completeLesson = () => {
-    setCompletedLessons(prev => ({...prev, [currentDay]: true}));
-    setShowFeedback(true);
-    setTimeout(() => {
-      if (currentDay < 30) {
-        setCurrentDay(currentDay + 1);
-        setSelectedLesson(null);
-        setUserAnswer('');
-        setShowFeedback(false);
-      }
-    }, 2000);
-  };
+h1 {
+  font-family: 'Orbitron', sans-serif;
+  font-size: clamp(1rem, 3vw, 1.6rem);
+  font-weight: 900;
+  letter-spacing: 0.15em;
+  background: linear-gradient(90deg, var(--glow-blue), var(--glow-purple));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  filter: drop-shadow(0 0 20px rgba(0,191,255,0.5));
+  margin-bottom: 6px;
+  text-align: center;
+}
 
-  const progress = (Object.keys(completedLessons).length / 30) * 100;
+.tagline {
+  color: var(--dim);
+  font-size: 0.7rem;
+  letter-spacing: 0.2em;
+  margin-bottom: 16px;
+  text-align: center;
+}
 
-  return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 p-4">
-      <div className="max-w-6xl mx-auto">
-        {/* Header */}
-        <div className="bg-white rounded-2xl shadow-xl p-6 mb-6">
-          <div className="flex items-center justify-between mb-4">
-            <div>
-              <h1 className="text-3xl font-bold text-gray-800 flex items-center gap-2">
-                <BookOpen className="text-indigo-600" />
-                เรียนภาษาอังกฤษ 1 เดือน
-              </h1>
-              <p className="text-gray-600 mt-2">พูด อ่าน เขียนได้ภายใน 30 วัน!</p>
-            </div>
-            <div className="text-right">
-              <div className="text-4xl font-bold text-indigo-600">วันที่ {currentDay}</div>
-              <div className="text-sm text-gray-500">จาก 30 วัน</div>
-            </div>
-          </div>
-          
-          {/* Progress Bar */}
-          <div className="mt-4">
-            <div className="flex justify-between mb-2">
-              <span className="text-sm font-medium text-gray-700">ความคืบหน้า</span>
-              <span className="text-sm font-medium text-indigo-600">{Math.round(progress)}%</span>
-            </div>
-            <div className="w-full bg-gray-200 rounded-full h-3">
-              <div 
-                className="bg-gradient-to-r from-indigo-500 to-purple-600 h-3 rounded-full transition-all duration-500"
-                style={{width: `${progress}%`}}
-              />
-            </div>
-          </div>
-        </div>
+#status-pill {
+  display: flex; align-items: center; gap: 8px;
+  padding: 7px 18px;
+  border-radius: 99px;
+  border: 1px solid var(--dim);
+  background: rgba(255,255,255,0.03);
+  font-size: 0.72rem;
+  color: var(--text);
+  margin-bottom: 20px;
+  transition: all 0.4s;
+}
+#status-pill.connected {
+  border-color: var(--green);
+  background: rgba(0,255,136,0.05);
+  color: var(--green);
+  box-shadow: 0 0 20px rgba(0,255,136,0.15);
+}
+.sdot {
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  background: var(--dim);
+  transition: all 0.4s;
+  flex-shrink: 0;
+}
+.sdot.on { background: var(--green); box-shadow: 0 0 8px var(--green); animation: blink 2s infinite; }
+@keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.4} }
 
-        <div className="grid md:grid-cols-3 gap-6">
-          {/* Sidebar - Week Navigation */}
-          <div className="md:col-span-1">
-            <div className="bg-white rounded-2xl shadow-lg p-4 sticky top-4">
-              <h2 className="font-bold text-lg mb-4 flex items-center gap-2">
-                <Calendar className="text-indigo-600" />
-                หลักสูตร 4 สัปดาห์
-              </h2>
-              
-              {Object.entries(curriculum).map(([weekKey, week]) => (
-                <div key={weekKey} className="mb-4">
-                  <h3 className="font-semibold text-sm text-gray-700 mb-2">{week.title}</h3>
-                  <div className="space-y-1">
-                    {week.days.map(day => (
-                      <button
-                        key={day.day}
-                        onClick={() => {
-                          setCurrentDay(day.day);
-                          setSelectedLesson(day);
-                          setUserAnswer('');
-                          setShowFeedback(false);
-                        }}
-                        className={`w-full text-left px-3 py-2 rounded-lg text-sm transition-all ${
-                          currentDay === day.day
-                            ? 'bg-indigo-600 text-white font-medium'
-                            : completedLessons[day.day]
-                            ? 'bg-green-100 text-green-800'
-                            : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                        }`}
-                      >
-                        <div className="flex items-center justify-between">
-                          <span>วันที่ {day.day}: {day.topic}</span>
-                          {completedLessons[day.day] && (
-                            <CheckCircle className="w-4 h-4" />
-                          )}
-                        </div>
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
+.ctrl-scene {
+  position: relative;
+  width: 100%;
+  max-width: 680px;
+  margin: 0 auto;
+  filter: drop-shadow(0 30px 60px rgba(0,0,0,0.9)) drop-shadow(0 0 40px rgba(0,100,255,0.08));
+}
 
-          {/* Main Content */}
-          <div className="md:col-span-2">
-            {currentLesson && (
-              <div className="space-y-4">
-                {/* Lesson Title */}
-                <div className="bg-gradient-to-r from-indigo-600 to-purple-600 rounded-2xl shadow-lg p-6 text-white">
-                  <h2 className="text-2xl font-bold mb-2">วันที่ {currentLesson.day}</h2>
-                  <h3 className="text-xl">{currentLesson.topic}</h3>
-                </div>
+svg#ctrl {
+  width: 100%;
+  height: auto;
+  display: block;
+  overflow: visible;
+}
 
-                {/* Vocabulary Section */}
-                <div className="bg-white rounded-2xl shadow-lg p-6">
-                  <h3 className="font-bold text-lg mb-4 flex items-center gap-2">
-                    <BookOpen className="text-indigo-600" />
-                    คำศัพท์วันนี้
-                  </h3>
-                  <div className="grid grid-cols-2 gap-3">
-                    {currentLesson.vocabulary.map((word, idx) => (
-                      <div key={idx} className="bg-indigo-50 p-3 rounded-lg flex items-center justify-between">
-                        <span className="font-medium text-gray-800">{word}</span>
-                        <Volume2 className="w-5 h-5 text-indigo-600 cursor-pointer hover:text-indigo-800" />
-                      </div>
-                    ))}
-                  </div>
-                </div>
+/* Body parts */
+.body-shadow    { fill: #05050c; }
+.body-main      { fill: url(#bodyGrad); }
+.grip-left      { fill: url(#gripGradL); }
+.grip-right     { fill: url(#gripGradR); }
+.touchpad-bg    { fill: url(#tpGrad); cursor: pointer; transition: filter 0.1s; }
+.touchpad-bg:hover { filter: brightness(1.3); }
+.touchpad-bg.active { filter: brightness(2); }
+.lightbar       { transition: fill 0.3s, filter 0.3s; }
+.lightbar.lit   { filter: drop-shadow(0 0 6px #0066ff) drop-shadow(0 0 12px #0044cc); }
 
-                {/* Reading Section */}
-                <div className="bg-white rounded-2xl shadow-lg p-6">
-                  <h3 className="font-bold text-lg mb-4 flex items-center gap-2">
-                    <BookOpen className="text-green-600" />
-                    ฝึกอ่าน (Reading)
-                  </h3>
-                  <div className="bg-green-50 p-4 rounded-lg">
-                    <p className="text-gray-800 text-lg leading-relaxed">{currentLesson.reading}</p>
-                  </div>
-                </div>
+/* Face buttons */
+.face-btn {
+  cursor: pointer;
+  transition: filter 0.07s, transform 0.07s;
+  transform-box: fill-box;
+  transform-origin: center;
+}
+.face-btn:hover { filter: brightness(1.3); }
+.face-btn.active { filter: brightness(2.5) saturate(1.8); transform: scale(0.91); }
 
-                {/* Speaking Section */}
-                <div className="bg-white rounded-2xl shadow-lg p-6">
-                  <h3 className="font-bold text-lg mb-4 flex items-center gap-2">
-                    <Mic className="text-red-600" />
-                    ฝึกพูด (Speaking)
-                  </h3>
-                  <div className="bg-red-50 p-4 rounded-lg">
-                    <p className="text-gray-800 mb-3">{currentLesson.speaking}</p>
-                    <button className="bg-red-600 text-white px-4 py-2 rounded-lg flex items-center gap-2 hover:bg-red-700 transition-colors">
-                      <Mic className="w-4 h-4" />
-                      กดพูดตามเสียง
-                    </button>
-                  </div>
-                </div>
+.btn-tri  { fill: #3faf3f; }
+.btn-o    { fill: #cc3333; }
+.btn-x    { fill: #3d7dc8; }
+.btn-sq   { fill: #b86898; }
+.btn-sym  { fill: rgba(255,255,255,0.9); pointer-events: none; font-family: 'Orbitron', sans-serif; font-size: 12px; font-weight: 700; text-anchor: middle; dominant-baseline: central; }
+.btn-tri-rim { fill: none; stroke: #2a8a2a; stroke-width: 1.5; }
+.btn-o-rim   { fill: none; stroke: #aa2222; stroke-width: 1.5; }
+.btn-x-rim   { fill: none; stroke: #2a5aa0; stroke-width: 1.5; }
+.btn-sq-rim  { fill: none; stroke: #8a4878; stroke-width: 1.5; }
 
-                {/* Writing Section */}
-                <div className="bg-white rounded-2xl shadow-lg p-6">
-                  <h3 className="font-bold text-lg mb-4 flex items-center gap-2">
-                    <Edit3 className="text-purple-600" />
-                    ฝึกเขียน (Writing)
-                  </h3>
-                  <div className="bg-purple-50 p-4 rounded-lg">
-                    <p className="text-gray-800 mb-3">{currentLesson.writing}</p>
-                    <textarea
-                      value={userAnswer}
-                      onChange={(e) => setUserAnswer(e.target.value)}
-                      placeholder="เขียนคำตอบของคุณที่นี่..."
-                      className="w-full p-3 border-2 border-purple-200 rounded-lg focus:border-purple-600 focus:outline-none min-h-32"
-                    />
-                  </div>
-                </div>
+/* Shoulders */
+.shoulder-btn { cursor: pointer; transition: filter 0.07s; }
+.shoulder-btn:hover { filter: brightness(1.3); }
+.shoulder-btn.active { filter: brightness(2.2) drop-shadow(0 0 10px #00bfff); }
+.sb-fill { fill: url(#sbGrad); }
+.sb-label { fill: rgba(255,255,255,0.65); font-size: 10px; text-anchor: middle; dominant-baseline: central; font-family: 'Orbitron'; font-weight: 700; pointer-events: none; }
 
-                {/* Complete Button */}
-                <div className="bg-white rounded-2xl shadow-lg p-6">
-                  {showFeedback ? (
-                    <div className="bg-green-100 border-2 border-green-500 rounded-lg p-4 text-center">
-                      <CheckCircle className="w-12 h-12 text-green-600 mx-auto mb-2" />
-                      <p className="text-green-800 font-bold text-lg">เยี่ยมมาก! คุณทำได้ดี! 🎉</p>
-                    </div>
-                  ) : (
-                    <button
-                      onClick={completeLesson}
-                      disabled={completedLessons[currentDay]}
-                      className={`w-full py-4 rounded-xl font-bold text-lg flex items-center justify-center gap-2 transition-all ${
-                        completedLessons[currentDay]
-                          ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                          : 'bg-gradient-to-r from-green-500 to-emerald-600 text-white hover:from-green-600 hover:to-emerald-700 shadow-lg hover:shadow-xl'
-                      }`}
-                    >
-                      {completedLessons[currentDay] ? (
-                        <>
-                          <CheckCircle className="w-6 h-6" />
-                          เรียนจบแล้ว!
-                        </>
-                      ) : (
-                        <>
-                          เรียนจบบทนี้
-                          <ChevronRight className="w-6 h-6" />
-                        </>
-                      )}
-                    </button>
-                  )}
-                </div>
-              </div>
-            )}
-          </div>
-        </div>
+/* Triggers */
+.trigger-btn { cursor: pointer; transition: filter 0.07s; }
+.trigger-btn.active { filter: brightness(2.0) drop-shadow(0 0 12px #9b59ff); }
+.trig-fill { fill: url(#trigGrad); }
+.trig-label { fill: rgba(255,255,255,0.55); font-size: 10px; text-anchor: middle; dominant-baseline: central; font-family: 'Orbitron'; font-weight: 700; pointer-events: none; }
 
-        {/* Tips Section */}
-        <div className="mt-6 bg-amber-50 border-2 border-amber-200 rounded-2xl p-6">
-          <h3 className="font-bold text-lg mb-3 text-amber-900 flex items-center gap-2">
-            <Trophy className="text-amber-600" />
-            เคลับลับความสำเร็จ!
-          </h3>
-          <ul className="space-y-2 text-amber-900">
-            <li>✅ เรียนทุกวัน 30-60 นาที ดีกว่าเรียนทีเดียวหลายชั่วโมง</li>
-            <li>✅ พูดออกเสียงทุกคำที่เรียน อย่าแค่อ่านในใจ</li>
-            <li>✅ เขียนด้วยมือจริงๆ ไม่ใช่แค่พิมพ์ - สมองจะจดจำได้ดีกว่า</li>
-            <li>✅ ใช้ภาษาอังกฤษในชีวิตจริง - พูดกับตัวเอง บรรยายสิ่งที่เห็น</li>
-            <li>✅ อย่ากลัวผิด! ผิดแล้วเรียนรู้ = คุณกำลังก้าวหน้า</li>
-          </ul>
-        </div>
+/* D-Pad */
+.dpad-arm { cursor: pointer; transition: filter 0.07s; }
+.dpad-arm.active { filter: brightness(2.5) drop-shadow(0 0 8px #ffd700); }
+.dp-fill   { fill: url(#dpGrad); }
+.dp-center { fill: #0f0f1e; }
+.dp-arrow  { fill: rgba(255,255,255,0.4); pointer-events: none; }
+
+/* Sticks */
+.st-outer   { fill: url(#stOuter); }
+.st-ring    { fill: url(#stRing); }
+.st-knob    { fill: url(#stKnob); cursor: grab; }
+.st-knob.active { fill: url(#stActive); }
+.st-shine   { fill: rgba(255,255,255,0.06); pointer-events: none; }
+.st-label   { fill: rgba(255,255,255,0.15); font-size: 8px; text-anchor: middle; dominant-baseline: central; font-family: 'Orbitron'; pointer-events: none; }
+
+/* Mini buttons */
+.mini-btn { cursor: pointer; transition: filter 0.07s; }
+.mini-btn.active { filter: brightness(2.5) drop-shadow(0 0 8px var(--glow-blue)); }
+.mini-fill { fill: url(#miniGrad); }
+.mini-label { fill: rgba(255,255,255,0.5); font-size: 8px; text-anchor: middle; dominant-baseline: central; font-family: 'Orbitron'; font-weight: 700; pointer-events: none; }
+
+/* PS button */
+.ps-group { cursor: pointer; transition: filter 0.07s; }
+.ps-group:hover { filter: brightness(1.3); }
+.ps-group.active { filter: brightness(3.0) drop-shadow(0 0 16px #4488ff); }
+.ps-fill  { fill: url(#psGrad); }
+.ps-label { fill: rgba(255,255,255,0.75); font-size: 11px; text-anchor: middle; dominant-baseline: central; font-family: 'Orbitron'; font-weight: 900; pointer-events: none; }
+
+/* INFO ROW */
+.info-row {
+  display: flex;
+  gap: 12px;
+  width: 100%;
+  max-width: 680px;
+  margin-top: 14px;
+}
+.info-box {
+  flex: 1;
+  background: rgba(255,255,255,0.02);
+  border: 1px solid #1e2030;
+  border-radius: 10px;
+  padding: 12px 14px;
+}
+.info-title {
+  font-family: 'Orbitron', sans-serif;
+  font-size: 0.6rem;
+  letter-spacing: 0.2em;
+  color: var(--glow-blue);
+  margin-bottom: 10px;
+  opacity: 0.8;
+}
+.sticks-row { display: flex; gap: 12px; }
+.jvis { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 6px; }
+.jvis-name { font-size: 0.6rem; color: var(--dim); letter-spacing: 0.1em; }
+.jpad {
+  position: relative;
+  width: 64px; height: 64px;
+  background: #090912;
+  border: 1px solid #1e2030;
+  border-radius: 50%;
+  overflow: hidden;
+}
+.jpad::before, .jpad::after {
+  content: ''; position: absolute;
+  background: rgba(255,255,255,0.04);
+}
+.jpad::before { left:50%; top:10%; bottom:10%; width:1px; transform:translateX(-50%); }
+.jpad::after  { top:50%; left:10%; right:10%; height:1px; transform:translateY(-50%); }
+.jdot {
+  position: absolute;
+  width: 10px; height: 10px;
+  background: var(--glow-blue);
+  border-radius: 50%;
+  box-shadow: 0 0 8px var(--glow-blue);
+  transform: translate(-50%, -50%);
+  top: 50%; left: 50%;
+  transition: left 0.04s, top 0.04s;
+}
+.jval { font-size: 0.58rem; color: var(--dim); }
+.jval span { color: var(--glow-blue); }
+.trig-row { display: flex; flex-direction: column; gap: 8px; }
+.trig-row-item { display: flex; align-items: center; gap: 8px; }
+.trig-lbl { font-size: 0.65rem; color: var(--dim); width: 20px; }
+.trig-track { flex: 1; height: 6px; background: #0a0a14; border-radius: 3px; border: 1px solid #1e2030; overflow: hidden; }
+.trig-bar { height: 100%; width: 0%; border-radius: 3px; background: linear-gradient(90deg, var(--glow-purple), var(--glow-blue)); transition: width 0.04s; }
+.trig-pct { font-size: 0.6rem; color: var(--glow-blue); width: 28px; text-align: right; }
+#log { height: 80px; overflow-y: auto; font-size: 0.65rem; line-height: 1.8; }
+#log::-webkit-scrollbar { width: 3px; }
+#log::-webkit-scrollbar-thumb { background: #1e2030; border-radius: 2px; }
+.le { display: flex; gap: 8px; animation: fin 0.15s ease; }
+@keyframes fin { from { opacity:0; transform:translateX(-4px); } to { opacity:1; } }
+.lt { color: #2a3340; flex-shrink: 0; }
+.lp { color: var(--green); }
+.lr { color: #ff4466; }
+.li { color: var(--yellow); }
+.rumb-btn {
+  display: flex; align-items: center; gap: 8px;
+  background: linear-gradient(135deg, rgba(155,89,255,0.2), rgba(0,191,255,0.15));
+  border: 1px solid rgba(155,89,255,0.4);
+  color: #c0a8ff;
+  font-family: 'Orbitron', sans-serif;
+  font-size: 0.6rem;
+  letter-spacing: 0.12em;
+  padding: 7px 16px;
+  border-radius: 6px;
+  cursor: pointer;
+  margin-top: 12px;
+  transition: all 0.2s;
+  width: 100%;
+  justify-content: center;
+}
+.rumb-btn:hover { border-color: var(--glow-purple); box-shadow: 0 0 16px rgba(155,89,255,0.3); }
+
+@media (max-width: 520px) {
+  .info-row { flex-direction: column; }
+}
+</style>
+</head>
+<body>
+
+<h1>PS4 CONTROLLER TESTER</h1>
+<div class="tagline">GAMEPAD API · REAL-TIME · PLUG &amp; PLAY</div>
+
+<div id="status-pill">
+  <div class="sdot" id="sdot"></div>
+  <span id="stext">เชื่อมต่อ Controller แล้วกดปุ่มใดก็ได้...</span>
+</div>
+
+<div class="ctrl-scene">
+<svg id="ctrl" viewBox="0 0 700 430" xmlns="http://www.w3.org/2000/svg">
+<defs>
+  <linearGradient id="bodyGrad" x1="0" y1="0" x2="0" y2="1">
+    <stop offset="0%" stop-color="#2b2b40"/>
+    <stop offset="45%" stop-color="#1e1e30"/>
+    <stop offset="100%" stop-color="#141420"/>
+  </linearGradient>
+  <radialGradient id="gripGradL" cx="65%" cy="25%" r="70%">
+    <stop offset="0%" stop-color="#1c1c2c"/>
+    <stop offset="100%" stop-color="#0a0a14"/>
+  </radialGradient>
+  <radialGradient id="gripGradR" cx="35%" cy="25%" r="70%">
+    <stop offset="0%" stop-color="#1c1c2c"/>
+    <stop offset="100%" stop-color="#0a0a14"/>
+  </radialGradient>
+  <radialGradient id="tpGrad" cx="50%" cy="35%">
+    <stop offset="0%" stop-color="#252538"/>
+    <stop offset="100%" stop-color="#181826"/>
+  </radialGradient>
+  <linearGradient id="sbGrad" x1="0" y1="0" x2="0" y2="1">
+    <stop offset="0%" stop-color="#36364e"/>
+    <stop offset="100%" stop-color="#20202e"/>
+  </linearGradient>
+  <linearGradient id="trigGrad" x1="0" y1="0" x2="0" y2="1">
+    <stop offset="0%" stop-color="#262636"/>
+    <stop offset="100%" stop-color="#141422"/>
+  </linearGradient>
+  <radialGradient id="dpGrad" cx="50%" cy="30%">
+    <stop offset="0%" stop-color="#2a2a3e"/>
+    <stop offset="100%" stop-color="#18182a"/>
+  </radialGradient>
+  <radialGradient id="stOuter" cx="50%" cy="40%">
+    <stop offset="0%" stop-color="#222234"/>
+    <stop offset="100%" stop-color="#0e0e1c"/>
+  </radialGradient>
+  <radialGradient id="stRing" cx="50%" cy="35%">
+    <stop offset="0%" stop-color="#2c2c44"/>
+    <stop offset="100%" stop-color="#18182c"/>
+  </radialGradient>
+  <radialGradient id="stKnob" cx="38%" cy="30%">
+    <stop offset="0%" stop-color="#38384e"/>
+    <stop offset="100%" stop-color="#1c1c2e"/>
+  </radialGradient>
+  <radialGradient id="stActive" cx="38%" cy="30%">
+    <stop offset="0%" stop-color="#5040a0"/>
+    <stop offset="100%" stop-color="#2a1a60"/>
+  </radialGradient>
+  <linearGradient id="miniGrad" x1="0" y1="0" x2="0" y2="1">
+    <stop offset="0%" stop-color="#282840"/>
+    <stop offset="100%" stop-color="#18182c"/>
+  </linearGradient>
+  <radialGradient id="psGrad" cx="45%" cy="35%">
+    <stop offset="0%" stop-color="#323252"/>
+    <stop offset="100%" stop-color="#1c1c38"/>
+  </radialGradient>
+  <filter id="bs">
+    <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#000" flood-opacity="0.8"/>
+  </filter>
+  <filter id="bs2">
+    <feDropShadow dx="0" dy="1" stdDeviation="2" flood-color="#000" flood-opacity="0.6"/>
+  </filter>
+</defs>
+
+<!-- Ground shadow -->
+<ellipse cx="350" cy="435" rx="290" ry="22" fill="rgba(0,0,0,0.55)"/>
+
+<!-- ===== TRIGGERS ===== -->
+<g class="trigger-btn" id="btn-l2">
+  <path class="trig-fill" d="M88,56 C96,28 124,14 158,16 L166,16 L170,72 C142,72 112,68 92,74 Z"/>
+  <text class="trig-label" x="125" y="42">L2</text>
+</g>
+<g class="trigger-btn" id="btn-r2">
+  <path class="trig-fill" d="M612,56 C604,28 576,14 542,16 L534,16 L530,72 C558,72 588,68 608,74 Z"/>
+  <text class="trig-label" x="575" y="42">R2</text>
+</g>
+
+<!-- ===== GRIPS ===== -->
+<path class="grip-left"  d="M58,316 C52,360 65,398 105,416 C135,428 166,423 193,407 C210,396 222,374 226,344 L186,300 Z" filter="url(#bs)"/>
+<path class="grip-right" d="M642,316 C648,360 635,398 595,416 C565,428 534,423 507,407 C490,396 478,374 474,344 L514,300 Z" filter="url(#bs)"/>
+
+<!-- ===== MAIN BODY ===== -->
+<path class="body-main" d="
+  M166,18 C196,14 238,12 280,12 L420,12 C462,12 504,14 534,18
+  L608,78 C636,97 655,128 658,162
+  L662,292 C662,316 650,338 634,350
+  L514,300 C504,276 490,256 474,242
+  L440,232 L260,232 L226,242
+  C210,256 196,276 186,300
+  L66,350 C50,338 38,316 38,292
+  L42,162
+  C45,128 64,97 92,78 Z
+" filter="url(#bs)"/>
+
+<!-- Body top highlight -->
+<path fill="rgba(255,255,255,0.04)" d="M166,18 C196,14 238,12 280,12 L420,12 C462,12 504,14 534,18 L558,36 C504,28 462,24 420,24 L280,24 C238,24 196,28 142,36 Z"/>
+
+<!-- ===== LIGHT BAR ===== -->
+<rect class="lightbar" id="light-bar" x="290" y="13" width="120" height="10" rx="5" fill="#0a0a1e"/>
+
+<!-- ===== TOUCHPAD ===== -->
+<rect class="touchpad-bg" id="btn-touchpad" x="230" y="112" width="240" height="132" rx="14" filter="url(#bs2)"/>
+<!-- Touchpad texture lines -->
+<line x1="244" y1="112" x2="236" y2="244" stroke="rgba(255,255,255,0.025)" stroke-width="1"/>
+<line x1="456" y1="112" x2="464" y2="244" stroke="rgba(255,255,255,0.025)" stroke-width="1"/>
+<text x="350" y="180" fill="rgba(255,255,255,0.07)" font-size="9" text-anchor="middle" font-family="JetBrains Mono" letter-spacing="3">TOUCH PAD</text>
+
+<!-- ===== L1 R1 ===== -->
+<g class="shoulder-btn" id="btn-l1">
+  <path class="sb-fill" d="M96,78 C108,62 136,54 168,54 L170,54 L170,86 C144,86 116,88 98,98 Z" filter="url(#bs2)"/>
+  <text class="sb-label" x="130" y="71">L1</text>
+</g>
+<g class="shoulder-btn" id="btn-r1">
+  <path class="sb-fill" d="M604,78 C592,62 564,54 532,54 L530,54 L530,86 C556,86 584,88 602,98 Z" filter="url(#bs2)"/>
+  <text class="sb-label" x="570" y="71">R1</text>
+</g>
+
+<!-- ===== D-PAD ===== -->
+<g id="dpad">
+  <rect class="dp-center" x="150" y="172" width="40" height="42" rx="3"/>
+  <!-- Up -->
+  <g class="dpad-arm" id="btn-dup">
+    <path class="dp-fill" d="M152,172 L152,148 C152,143 156,139 161,139 L179,139 C184,139 188,143 188,148 L188,172 Z" filter="url(#bs2)"/>
+    <polygon class="dp-arrow" points="170,143 163,153 177,153"/>
+  </g>
+  <!-- Down -->
+  <g class="dpad-arm" id="btn-ddown">
+    <path class="dp-fill" d="M152,214 L152,238 C152,243 156,247 161,247 L179,247 C184,247 188,243 188,238 L188,214 Z" filter="url(#bs2)"/>
+    <polygon class="dp-arrow" points="170,243 163,233 177,233"/>
+  </g>
+  <!-- Left -->
+  <g class="dpad-arm" id="btn-dleft">
+    <path class="dp-fill" d="M150,174 L126,174 C121,174 117,178 117,183 L117,203 C117,208 121,212 126,212 L150,212 Z" filter="url(#bs2)"/>
+    <polygon class="dp-arrow" points="121,193 131,186 131,200"/>
+  </g>
+  <!-- Right -->
+  <g class="dpad-arm" id="btn-dright">
+    <path class="dp-fill" d="M190,174 L214,174 C219,174 223,178 223,183 L223,203 C223,208 219,212 214,212 L190,212 Z" filter="url(#bs2)"/>
+    <polygon class="dp-arrow" points="219,193 209,186 209,200"/>
+  </g>
+  <rect class="dp-center" x="150" y="174" width="40" height="38" rx="2"/>
+</g>
+
+<!-- ===== FACE BUTTONS ===== -->
+<!-- △ -->
+<g class="face-btn" id="btn-triangle">
+  <circle class="btn-tri-rim" cx="490" cy="152" r="19"/>
+  <circle class="btn-tri" cx="490" cy="152" r="18" filter="url(#bs)"/>
+  <text class="btn-sym" x="490" y="153">△</text>
+</g>
+<!-- ○ -->
+<g class="face-btn" id="btn-circle">
+  <circle class="btn-o-rim" cx="520" cy="182" r="19"/>
+  <circle class="btn-o" cx="520" cy="182" r="18" filter="url(#bs)"/>
+  <text class="btn-sym" x="520" y="183">○</text>
+</g>
+<!-- ✕ -->
+<g class="face-btn" id="btn-cross">
+  <circle class="btn-x-rim" cx="490" cy="212" r="19"/>
+  <circle class="btn-x" cx="490" cy="212" r="18" filter="url(#bs)"/>
+  <text class="btn-sym" x="490" y="213">✕</text>
+</g>
+<!-- □ -->
+<g class="face-btn" id="btn-square">
+  <circle class="btn-sq-rim" cx="460" cy="182" r="19"/>
+  <circle class="btn-sq" cx="460" cy="182" r="18" filter="url(#bs)"/>
+  <text class="btn-sym" x="460" y="183">□</text>
+</g>
+
+<!-- ===== SHARE / OPTIONS ===== -->
+<g class="mini-btn" id="btn-share">
+  <rect class="mini-fill" x="244" y="118" width="30" height="15" rx="7.5" filter="url(#bs2)"/>
+  <text class="mini-label" x="259" y="127">⟪</text>
+</g>
+<g class="mini-btn" id="btn-options">
+  <rect class="mini-fill" x="426" y="118" width="30" height="15" rx="7.5" filter="url(#bs2)"/>
+  <text class="mini-label" x="441" y="127">⟫</text>
+</g>
+
+<!-- ===== PS BUTTON ===== -->
+<g class="ps-group" id="btn-ps">
+  <circle class="ps-fill" cx="350" cy="295" r="22" filter="url(#bs)"/>
+  <!-- PS ring highlight -->
+  <circle fill="none" stroke="rgba(255,255,255,0.08)" stroke-width="1.5" cx="350" cy="295" r="20"/>
+  <text class="ps-label" x="350" y="296">PS</text>
+</g>
+
+<!-- ===== LEFT ANALOG STICK ===== -->
+<g id="lstick-g">
+  <circle class="st-outer" cx="263" cy="298" r="40" filter="url(#bs)"/>
+  <circle class="st-ring"  cx="263" cy="298" r="34"/>
+  <circle class="st-knob"  id="lstick" cx="263" cy="298" r="28" filter="url(#bs2)"/>
+  <!-- Texture ring -->
+  <circle fill="none" stroke="rgba(255,255,255,0.05)" stroke-width="1" cx="263" cy="298" r="26"/>
+  <circle class="st-shine" cx="255" cy="290" r="11"/>
+  <text class="st-label" x="263" y="299">L3</text>
+  <circle id="lstick-cur" cx="263" cy="298" r="5" fill="rgba(255,255,255,0.1)" pointer-events="none"/>
+</g>
+
+<!-- ===== RIGHT ANALOG STICK ===== -->
+<g id="rstick-g">
+  <circle class="st-outer" cx="437" cy="298" r="40" filter="url(#bs)"/>
+  <circle class="st-ring"  cx="437" cy="298" r="34"/>
+  <circle class="st-knob"  id="rstick" cx="437" cy="298" r="28" filter="url(#bs2)"/>
+  <circle fill="none" stroke="rgba(255,255,255,0.05)" stroke-width="1" cx="437" cy="298" r="26"/>
+  <circle class="st-shine" cx="429" cy="290" r="11"/>
+  <text class="st-label" x="437" y="299">R3</text>
+  <circle id="rstick-cur" cx="437" cy="298" r="5" fill="rgba(255,255,255,0.1)" pointer-events="none"/>
+</g>
+
+<!-- Vent holes decorations -->
+<circle fill="#0a0a14" cx="83" cy="205" r="3.5"/>
+<circle fill="#0a0a14" cx="94" cy="218" r="3"/>
+<circle fill="#0a0a14" cx="80" cy="220" r="2.5"/>
+<circle fill="#0a0a14" cx="617" cy="205" r="3.5"/>
+<circle fill="#0a0a14" cx="606" cy="218" r="3"/>
+<circle fill="#0a0a14" cx="620" cy="220" r="2.5"/>
+
+<!-- Subtle body seam lines -->
+<path fill="none" stroke="rgba(0,0,0,0.5)" stroke-width="2" d="M170,20 C182,55 182,98 182,120"/>
+<path fill="none" stroke="rgba(0,0,0,0.5)" stroke-width="2" d="M530,20 C518,55 518,98 518,120"/>
+
+</svg>
+</div>
+
+<!-- INFO ROW -->
+<div class="info-row">
+  <div class="info-box">
+    <div class="info-title">ANALOG STICKS</div>
+    <div class="sticks-row">
+      <div class="jvis">
+        <div class="jvis-name">LEFT</div>
+        <div class="jpad"><div class="jdot" id="lj-dot"></div></div>
+        <div class="jval">X:<span id="lx">0.00</span> Y:<span id="ly">0.00</span></div>
+      </div>
+      <div class="jvis">
+        <div class="jvis-name">RIGHT</div>
+        <div class="jpad"><div class="jdot" id="rj-dot"></div></div>
+        <div class="jval">X:<span id="rx">0.00</span> Y:<span id="ry">0.00</span></div>
       </div>
     </div>
-  );
-};
+    <div class="info-title" style="margin-top:12px;">TRIGGERS</div>
+    <div class="trig-row">
+      <div class="trig-row-item">
+        <div class="trig-lbl">L2</div>
+        <div class="trig-track"><div class="trig-bar" id="l2-bar"></div></div>
+        <div class="trig-pct" id="l2-pct">0%</div>
+      </div>
+      <div class="trig-row-item">
+        <div class="trig-lbl">R2</div>
+        <div class="trig-track"><div class="trig-bar" id="r2-bar"></div></div>
+        <div class="trig-pct" id="r2-pct">0%</div>
+      </div>
+    </div>
+  </div>
 
-export default EnglishLearningApp;
+  <div class="info-box" style="flex:1.4;">
+    <div class="info-title" style="display:flex;justify-content:space-between;align-items:center;">
+      EVENT LOG
+      <button onclick="document.getElementById('log').innerHTML=''" style="background:none;border:1px solid #1e2030;color:#2a3340;font-family:'JetBrains Mono';font-size:0.55rem;padding:2px 8px;border-radius:4px;cursor:pointer;">CLEAR</button>
+    </div>
+    <div id="log"></div>
+    <button class="rumb-btn" onclick="rumble()">⚡ TEST RUMBLE</button>
+  </div>
+</div>
+
+<script>
+const BTNS = [
+  { i:0,  svg:'btn-cross',    name:'Cross ✕' },
+  { i:1,  svg:'btn-circle',   name:'Circle ○' },
+  { i:2,  svg:'btn-square',   name:'Square □' },
+  { i:3,  svg:'btn-triangle', name:'Triangle △' },
+  { i:4,  svg:'btn-l1',       name:'L1' },
+  { i:5,  svg:'btn-r1',       name:'R1' },
+  { i:6,  svg:'btn-l2',       name:'L2', trig:true },
+  { i:7,  svg:'btn-r2',       name:'R2', trig:true },
+  { i:8,  svg:'btn-share',    name:'Share' },
+  { i:9,  svg:'btn-options',  name:'Options' },
+  { i:10, svg:'lstick',       name:'L3' },
+  { i:11, svg:'rstick',       name:'R3' },
+  { i:12, svg:'btn-dup',      name:'D-Up ↑' },
+  { i:13, svg:'btn-ddown',    name:'D-Down ↓' },
+  { i:14, svg:'btn-dleft',    name:'D-Left ←' },
+  { i:15, svg:'btn-dright',   name:'D-Right →' },
+  { i:16, svg:'btn-ps',       name:'PS' },
+  { i:17, svg:'btn-touchpad', name:'TouchPad' },
+];
+
+const LS = { x:263, y:298, r:14 };
+const RS = { x:437, y:298, r:14 };
+let gpIdx = null, prev = {}, raf = null;
+
+// Safe gamepad getter with error handling
+function getGamepads() {
+  try {
+    return navigator.getGamepads ? navigator.getGamepads() : [];
+  } catch (e) {
+    console.error('Gamepad API error:', e);
+    // Show user-friendly error
+    if (e.name === 'SecurityError') {
+      document.getElementById('stext').textContent = '⚠️ Gamepad API ถูกบล็อก - โปรดเปิดไฟล์โดยตรงในเบราว์เซอร์ (ไม่ใช่ใน iframe)';
+      document.getElementById('stext').style.color = 'var(--red)';
+    }
+    return [];
+  }
+}
+
+window.addEventListener('gamepadconnected', e => {
+  gpIdx = e.gamepad.index;
+  document.getElementById('sdot').className = 'sdot on';
+  document.getElementById('status-pill').className = 'connected';
+  const n = e.gamepad.id.length > 55 ? e.gamepad.id.substring(0,55)+'…' : e.gamepad.id;
+  document.getElementById('stext').textContent = '✓ ' + n;
+  document.getElementById('light-bar').classList.add('lit');
+  log('i','Controller connected');
+  if (!raf) loop();
+});
+
+window.addEventListener('gamepaddisconnected', () => {
+  gpIdx = null;
+  document.getElementById('sdot').className = 'sdot';
+  document.getElementById('status-pill').className = '';
+  document.getElementById('stext').textContent = 'Disconnected. กดปุ่มบน Controller เพื่อเชื่อมต่อ...';
+  document.getElementById('light-bar').classList.remove('lit');
+  log('r','Controller disconnected');
+  if (raf) { cancelAnimationFrame(raf); raf = null; }
+});
+
+function loop() {
+  raf = requestAnimationFrame(loop);
+  const gps = getGamepads();
+  const gp = gps[gpIdx];
+  if (!gp) return;
+
+  BTNS.forEach(b => {
+    const btn = gp.buttons[b.i];
+    if (!btn) return;
+    const val = typeof btn === 'object' ? btn.value : Number(btn);
+    const pressed = btn.pressed || val > 0.12;
+    const was = prev[b.i] || false;
+    const el = document.getElementById(b.svg);
+    if (pressed !== was) {
+      if (el) el.classList.toggle('active', pressed);
+      log(pressed ? 'p' : 'r', b.name + (pressed ? ' ▼' : ' ▲'));
+      prev[b.i] = pressed;
+    }
+    if (b.i === 6) { const p=Math.round(val*100); setTrig('l2',p); }
+    if (b.i === 7) { const p=Math.round(val*100); setTrig('r2',p); }
+  });
+
+  const ax = gp.axes;
+  if (ax.length >= 2) stick(ax[0]||0, ax[1]||0, 'lj-dot','lx','ly','lstick-cur','lstick', LS);
+  if (ax.length >= 4) stick(ax[2]||0, ax[3]||0, 'rj-dot','rx','ry','rstick-cur','rstick', RS);
+}
+
+function setTrig(id, pct) {
+  document.getElementById(id+'-bar').style.width = pct+'%';
+  document.getElementById(id+'-pct').textContent = pct+'%';
+}
+
+function stick(x, y, dotId, xId, yId, curId, knobId, base) {
+  const dot = document.getElementById(dotId);
+  if (dot) { dot.style.left = ((x+1)/2*100)+'%'; dot.style.top = ((y+1)/2*100)+'%'; }
+  document.getElementById(xId).textContent = x.toFixed(2);
+  document.getElementById(yId).textContent = y.toFixed(2);
+  const cur = document.getElementById(curId);
+  if (cur) { cur.setAttribute('cx', base.x + x*base.r); cur.setAttribute('cy', base.y + y*base.r); }
+  const kn = document.getElementById(knobId);
+  if (kn) { kn.setAttribute('cx', base.x + x*base.r*0.55); kn.setAttribute('cy', base.y + y*base.r*0.55); }
+}
+
+const MAX = 80;
+function log(type, msg) {
+  const el = document.getElementById('log');
+  const now = new Date();
+  const t = `${String(now.getMinutes()).padStart(2,'0')}:${String(now.getSeconds()).padStart(2,'0')}.${String(now.getMilliseconds()).substring(0,2)}`;
+  const cls = type==='p'?'lp':type==='r'?'lr':'li';
+  const d = document.createElement('div');
+  d.className = 'le';
+  d.innerHTML = `<span class="lt">[${t}]</span><span class="${cls}">${msg}</span>`;
+  el.insertBefore(d, el.firstChild);
+  while (el.children.length > MAX) el.removeChild(el.lastChild);
+}
+
+function rumble() {
+  const gps = getGamepads();
+  const gp = gps[gpIdx];
+  if (!gp) { log('i','No controller'); return; }
+  if (gp.vibrationActuator) {
+    gp.vibrationActuator.playEffect('dual-rumble', { startDelay:0, duration:600, weakMagnitude:0.4, strongMagnitude:1.0 })
+      .then(() => log('i','Rumble sent ✓'))
+      .catch(() => log('i','Rumble not supported'));
+  } else { log('i','Vibration API unavailable'); }
+}
+
+window.addEventListener('load', () => {
+  const gps = getGamepads();
+  for (let i=0;i<gps.length;i++) {
+    if (gps[i]) {
+      gpIdx = gps[i].index;
+      document.getElementById('sdot').className = 'sdot on';
+      document.getElementById('status-pill').className = 'connected';
+      document.getElementById('stext').textContent = '✓ ' + gps[i].id.substring(0,55);
+      document.getElementById('light-bar').classList.add('lit');
+      if (!raf) loop();
+      break;
+    }
+  }
+});
+</script>
+</body>
+</html>
